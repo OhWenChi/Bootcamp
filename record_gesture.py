@@ -1,3 +1,4 @@
+# record_gesture.py (Laptop)
 import serial
 import time
 import os
