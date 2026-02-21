@@ -124,16 +124,15 @@ while True:
         set_leds(1, 1, 1); buzz("rapid")
         oled.text("Action: alert", 0, 34, 1)
     elif lab == "wave":
-        set_leds(1, 0, 0); time.sleep_ms(80)
-        set_leds(0, 1, 0); time.sleep_ms(80)
-        set_leds(0, 0, 1); time.sleep_ms(80)
+        set_leds(1, 0, 1); time.sleep_ms(80)
         buzz("medium")
         oled.text("Action: greet", 0, 34, 1)
     elif lab == "raise":
-        set_leds(1, 1, 1); buzz("long")
+        set_leds(0, 1, 0); buzz("long")
         oled.text("Action: up", 0, 34, 1)
     else:
         set_leds(0, 0, 0); buzz("off")
         oled.text("Unknown", 0, 34, 1)
 
     oled.show()
+
