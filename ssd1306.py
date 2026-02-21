@@ -1,4 +1,4 @@
-# ssd1306.py  (save this file to the ESP32)
+# ssd1306.py  (ESP32-S3 MicroPython)
 # MicroPython SSD1306 OLED driver (I2C) for 128x64
 import framebuf
 
