@@ -1,84 +1,75 @@
 # record_gesture.py (Laptop)
-import serial
-import time
-import os
+import os, time
 from datetime import datetime
+import serial
+from serial.tools import list_ports
 
-PORT = "COM4"        # change if needed
 BAUD = 115200
 OUT_DIR = "imu_data"
-SAMPLE_SECONDS = 3.0  # 3–4s is safer than 2s
-WARMUP_SECONDS = 2.0  # let USB CDC stabilise
-IGNORE_FIRST_LINES = 10  # ignore initial junk
+SAMPLE_SECONDS = 3.0
 
-VALID_LABELS = {"idle", "shake", "wave", "raise"}
+MAP = {"i": "idle", "s": "shake", "w": "wave", "r": "raise"}
+VALID = set(MAP.values())
 
-def parse_line(line: str):
-    line = line.strip()
-    if not line:
-        return None
-    if line.startswith("ts") or line.startswith("ts_ms"):
-        return None
-    parts = [p.strip() for p in line.split(",")]
-    if len(parts) != 7:
-        return None
-    return parts  # [ts, ax, ay, az, gx, gy, gz]
+def choose_port():
+    ports = list(list_ports.comports())
+    for idx, p in enumerate(ports):
+        print(f"[{idx}] {p.device}  {p.description}")
+    return ports[int(input("Choose port index: ").strip())].device
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
+    port = choose_port()
 
-    print(f"Opening {PORT} @ {BAUD} ...")
-    with serial.Serial(PORT, BAUD, timeout=1) as ser:
-        print(f"Warm-up {WARMUP_SECONDS}s (USB CDC stabilise)...")
-        time.sleep(WARMUP_SECONDS)
+    ser = serial.Serial(port, BAUD, timeout=1)
+    time.sleep(1.0)
+    ser.reset_input_buffer()
+
+    while True:
+        x = input("Label (idle(i)/shake(s)/wave(w)/raise(r)) or q: ").strip().lower()
+        if x == "q":
+            break
+
+        label = MAP.get(x, x)
+        if label not in VALID:
+            print("Invalid input. Use i/s/w/r or q.")
+            continue
+
+        # IMPORTANT: clear any backlog right before recording
         ser.reset_input_buffer()
 
-        print("Ignoring a few initial lines (max 3 seconds)...")
-        ignored = 0
-        t_ignore = time.time()
-        while ignored < IGNORE_FIRST_LINES and (time.time() - t_ignore) < 3.0:
-            raw = ser.readline()
-            if raw:
-                ignored += 1
-        print(f"Ignored {ignored} lines. Starting interactive recording.")
+        # Optional but nice for students
+        print("Ready... 3")
+        time.sleep(0.3)
+        print("2")
+        time.sleep(0.3)
+        print("1")
+        time.sleep(0.3)
+        print("GO!")
 
+        fname = os.path.join(
+            OUT_DIR, f"{label}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        )
 
-        print("\nReady. Type a label to record a sample, or 'q' to quit.")
-        print("Valid labels:", ", ".join(sorted(VALID_LABELS)))
-        print(f"Each sample records {SAMPLE_SECONDS:.1f} seconds.\n")
+        rows = 0
+        with open(fname, "w", encoding="utf-8") as f:
+            f.write("ts_ms,ax,ay,az,gx,gy,gz,label\n")
 
-        while True:
-            label = input("Label (idle/shake/wave/raise) or q: ").strip().lower()
-            if label == "q":
-                break
-            if label not in VALID_LABELS:
-                print("Invalid label. Try again.")
-                continue
+            t0 = time.time()
+            while time.time() - t0 < SAMPLE_SECONDS:
+                line = ser.readline().decode(errors="ignore").strip()
+                if not line or line.startswith("ts"):
+                    continue
+                parts = line.split(",")
+                if len(parts) != 7:
+                    continue
+                f.write(",".join(parts) + f",{label}\n")
+                rows += 1
 
-            fname = os.path.join(
-                OUT_DIR, f"{label}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-            )
+        print(f"Recorded {rows} lines into {fname}")
+        print(f"Approx sampling rate: {rows / SAMPLE_SECONDS:.1f} Hz\n")
 
-            with open(fname, "w", encoding="utf-8") as f:
-                f.write("ts_ms,ax,ay,az,gx,gy,gz,label\n")
-
-                print(f"Recording '{label}' NOW for {SAMPLE_SECONDS:.1f}s...")
-                t0 = time.time()
-                rows = 0
-
-                while time.time() - t0 < SAMPLE_SECONDS:
-                    raw = ser.readline()
-                    if not raw:
-                        continue
-                    line = raw.decode(errors="ignore")
-                    parts = parse_line(line)
-                    if parts is None:
-                        continue
-                    f.write(",".join(parts) + f",{label}\n")
-                    rows += 1
-
-            print(f"Saved {rows} rows → {fname}\n")
+    ser.close()
 
 if __name__ == "__main__":
     main()
-
