@@ -15,7 +15,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 # Data Loading
-df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+df = pd.read_csv("Telco_Customer_Churn_dataset.csv")
 
 # Minimal Cleaning
 df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
