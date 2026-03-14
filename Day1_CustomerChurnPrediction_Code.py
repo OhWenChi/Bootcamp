@@ -114,3 +114,31 @@ def evaluate(model, X_test, y_test, name):
 
 lin_preds = evaluate(lin_model, X_test, y_test, "Linear Regression")
 rf_preds = evaluate(rf_model, X_test, y_test, "Random Forest Regression")
+
+# Feature Importance (Random Forest)
+# Get final transformed feature names directly from the whole preprocessing step
+feature_names = rf_model.named_steps["preprocess"].get_feature_names_out()
+
+# Get importance scores from Random Forest
+importances = rf_model.named_steps["model"].feature_importances_
+
+# Create dataframe
+importance_df = pd.DataFrame({
+    "Feature": feature_names,
+    "Importance": importances
+}).sort_values(by="Importance", ascending=False)
+
+print(importance_df.head(20))
+
+# Plot top 15 features
+top_n = 15
+top_features = importance_df.head(top_n).sort_values(by="Importance")
+
+plt.figure(figsize=(10, 6))
+plt.barh(top_features["Feature"], top_features["Importance"])
+plt.title("Top Factors Influencing Monthly Charges")
+plt.xlabel("Importance Score")
+plt.ylabel("Feature")
+plt.show()
+
+
