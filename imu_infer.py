@@ -5,17 +5,17 @@ from model_params import LABELS, CENTROIDS
 import ssd1306
 
 # I2C shared by IMU + OLED
-i2c = I2C(0, sda=Pin(14), scl=Pin(2), freq=400000)
+i2c = I2C(0, sda=Pin(8), scl=Pin(9), freq=400000)
 
 # OLED
 oled = ssd1306.SSD1306_I2C(128, 64, i2c)
 
 # LEDs + buzzer
-led1 = Pin(1, Pin.OUT)
-led2 = Pin(44, Pin.OUT)
-led3 = Pin(43, Pin.OUT)
+led1 = Pin(2, Pin.OUT)
+led2 = Pin(17, Pin.OUT)
+led3 = Pin(18, Pin.OUT)
 
-buzzer = PWM(Pin(21))
+buzzer = PWM(Pin(1))
 buzzer.duty(0)
 
 def set_leds(a, b, c):
@@ -45,17 +45,31 @@ def read_imu():
 def features_from_window(buf):
     amag = []
     gmag = []
+
+    sx = 0.0
+    sy = 0.0
+    sz = 0.0
+
     for ax, ay, az, gx, gy, gz in buf:
         amag.append(math.sqrt(ax*ax + ay*ay + az*az))
         gmag.append(math.sqrt(gx*gx + gy*gy + gz*gz))
+
+        sx += ax
+        sy += ay
+        sz += az
 
     def stats(x):
         n = len(x)
         m = sum(x) / n
         v = sum((t - m) * (t - m) for t in x) / n
-        return [m, math.sqrt(v), min(x), max(x), sum(t*t for t in x)/ n]
+        return [m, math.sqrt(v), min(x), max(x), sum(t*t for t in x) / n]
 
-    return stats(amag) + stats(gmag)
+    n = len(buf)
+    ax_mean = sx / n
+    ay_mean = sy / n
+    az_mean = sz / n
+
+    return stats(amag) + stats(gmag) + [ax_mean, ay_mean, az_mean]
 
 def predict_label(f):
     best_lab, best_d = None, 1e18
