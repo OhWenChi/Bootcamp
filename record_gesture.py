@@ -48,7 +48,7 @@ def main():
         print("GO!")
 
         fname = os.path.join(
-            OUT_DIR, f"{label}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            OUT_DIR, f"{label}{datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
         )
 
         rows = 0
@@ -71,5 +71,5 @@ def main():
 
     ser.close()
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     main()
