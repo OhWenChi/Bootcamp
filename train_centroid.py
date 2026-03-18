@@ -22,7 +22,15 @@ def features_from_df(df: pd.DataFrame):
             float((x * x).sum() / len(x)),
         ]
 
-    return np.array(stats(amag) + stats(gmag), dtype=np.float32)
+    # Axis mean features for differentiate shake and wave
+    ax_mean = float(a[:, 0].mean())
+    ay_mean = float(a[:, 1].mean())
+    az_mean = float(a[:, 2].mean())
+
+    return np.array(
+        stats(amag) + stats(gmag) + [ax_mean, ay_mean, az_mean],
+        dtype=np.float32
+    )
 
 def main():
     files = glob.glob(os.path.join(DATA_DIR, "*.csv"))
@@ -62,5 +70,5 @@ def main():
 
     print("Wrote:", OUT_MODEL)
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     main()
