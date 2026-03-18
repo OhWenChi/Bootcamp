@@ -2,7 +2,7 @@
 from machine import Pin, I2C
 import time, struct
 
-i2c = I2C(0, sda=Pin(14), scl=Pin(2), freq=400000)
+i2c = I2C(0, sda=Pin(8), scl=Pin(9), freq=400000)
 MPU = 0x68
 
 # wake + ranges
@@ -33,6 +33,3 @@ while True:
     if sleep > 0:
         time.sleep_ms(sleep)
     next_t = time.ticks_add(next_t, PERIOD_MS)
-
-
-
