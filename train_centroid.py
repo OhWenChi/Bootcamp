@@ -60,8 +60,27 @@ def main():
                 best_d, best_lab = d, lab
         return best_lab
 
-    acc = (np.array([predict(x) for x in X]) == y).mean()
-    print(f"Training accuracy: {acc*100:.1f}%")
+    # Predictions
+    y_pred = np.array([predict(x) for x in X])
+    
+    # Accuracy
+    acc = (y_pred == y).mean()
+    print(f"Accuracy: {acc*100:.1f}%\n")
+    
+    # Detailed metrics for Precision, Recall and F1-score
+    for lab in labels:
+        tp = np.sum((y_pred == lab) & (y == lab))
+        fp = np.sum((y_pred == lab) & (y != lab))
+        fn = np.sum((y_pred != lab) & (y == lab))
+    
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+        f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0
+    
+        print(f"{lab}:")
+        print(f"  Precision: {precision:.2f}")
+        print(f"  Recall:    {recall:.2f}")
+        print(f"  F1-score:  {f1:.2f}\n")
 
     with open(OUT_MODEL, "w", encoding="utf-8") as f:
         f.write("# Auto-generated model parameters (nearest-centroid)\n")
