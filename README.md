@@ -1,4 +1,4 @@
-# Edge AIoT Bootcamp
+# Second Edge AIoT Bootcamp
 
 The system has two environments:
 
